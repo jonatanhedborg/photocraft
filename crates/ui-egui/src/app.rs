@@ -251,6 +251,9 @@ impl eframe::App for PhotocraftApp {
             wheel_nav::fold_legacy_pinch(ctx, raw_input);
         }
         self.inject_synthetic(ctx, raw_input);
+        if let Some(drags) = self.services.file_drags.as_mut() {
+            drags(raw_input);
+        }
         // After the control channel's own events (`ui.type`) join the OS's, before any widget.
         widgets::cap_text_events(&mut raw_input.events);
         self.control_click.normalize(&mut raw_input.events, cfg!(target_os = "macos"));

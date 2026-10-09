@@ -40,6 +40,8 @@ mod control_server;
 mod crash_guard;
 mod cursor;
 mod file_dialog_probe;
+#[cfg(target_os = "linux")]
+mod file_drags;
 mod gpu_startup;
 #[cfg(target_os = "linux")]
 mod icon_theme;
@@ -645,6 +647,13 @@ fn main() -> eframe::Result {
             // Caps Lock state (X11/Windows/macOS; `None` on native Wayland): the canvas shows the
             // precise crosshair for painting tools while it is toggled on (#1758).
             app.services.caps_lock = caps_lock::service(cc);
+            // Native Wayland: winit reports no file drags at all; the listener supplies them and
+            // their position.
+            #[cfg(target_os = "linux")]
+            if let Some((drags, pos)) = file_drags::services(cc) {
+                app.services.file_drags = Some(drags);
+                app.services.cursor_pos = Some(pos);
+            }
             // Pick through the portal on a Wayland desktop even when the window went through
             // Xwayland (a pen, or the X11 display-server preference): Xwayland's root window has
             // no desktop pixels to read (#8977).

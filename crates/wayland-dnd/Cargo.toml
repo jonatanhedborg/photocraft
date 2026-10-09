@@ -1,0 +1,27 @@
+[package]
+name = "photocraft-wayland-dnd"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "File drag-and-drop on native Wayland, which winit 0.30 doesn't deliver"
+
+# An isolated `unsafe` helper crate (craftrules never-crash, AGENTS.md): adopting winit's
+# `wl_display` connection is a foreign-pointer call. Only `src/foreign.rs` allows `unsafe`;
+# everything else is denied, and every other crate keeps the workspace's `unsafe_code = "forbid"`.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+
+[dependencies]
+log = { workspace = true }
+
+# Already in Cargo.lock (eframe/winit pull them in, `client_system` included); pinned exactly:
+# review the diff before bumping.
+[target.'cfg(target_os = "linux")'.dependencies]
+raw-window-handle = "=0.6.2"
+rustix = { version = "=1.1.5", default-features = false, features = ["std", "event"] }
+wayland-backend = { version = "=0.3.17", features = ["client_system"] }
+wayland-client = "=0.31.15"

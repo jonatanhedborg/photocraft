@@ -704,6 +704,29 @@ fn drag_and_drop_in_the_running_app() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// Drags the windowing layer doesn't report (native Wayland) join each frame's input through the
+/// `file_drags` service, after the app's own input rewriting, so the UI handles them as usual.
+#[test]
+fn os_file_drags_join_the_frame_input() {
+    use eframe::App as _;
+    let (mut app, _) = app_with(Vec::new());
+    let file = std::path::PathBuf::from("/photos/dropped.png");
+    let mut frames = vec![Some(file.clone()), None];
+    app.services.file_drags = Some(Box::new(move |raw: &mut egui::RawInput| match frames.pop() {
+        Some(None) => raw.hovered_files.push(egui::HoveredFile::default()),
+        Some(Some(path)) => raw.dropped_files.push(dropped(path, Err("read from the path".into()))),
+        None => {}
+    }));
+    let ctx = egui::Context::default();
+    let mut raw = egui::RawInput::default();
+    app.raw_input_hook(&ctx, &mut raw);
+    assert_eq!(raw.hovered_files.len(), 1);
+    assert!(raw.dropped_files.is_empty());
+    let mut raw = egui::RawInput::default();
+    app.raw_input_hook(&ctx, &mut raw);
+    assert_eq!(raw.dropped_files.iter().map(|f| f.path().to_path_buf()).collect::<Vec<_>>(), vec![file]);
+}
+
 #[test]
 fn views_and_windows_stay_with_their_documents() {
     let (mut app, _) = app_with(Vec::new());

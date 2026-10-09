@@ -319,6 +319,10 @@ pub type CaptionStyleFn = Box<dyn Fn(&egui::Context) -> CaptionStyle>;
 /// Physical right mouse button or stylus barrel button down (Windows; read for brush resize).
 pub type RightButtonDownFn = Box<dyn Fn() -> bool + Send + Sync>;
 
+/// Adds the file drags and drops the windowing layer doesn't report (see [`Services::file_drags`])
+/// to a frame's input.
+pub type FileDragsFn = Box<dyn FnMut(&mut egui::RawInput)>;
+
 /// Platform services injected by the app binary (file dialogs, codecs), keeping this crate free of
 /// I/O dependencies.
 #[derive(Default)]
@@ -427,6 +431,9 @@ pub struct Services {
     pub caption_style: Option<CaptionStyleFn>,
     /// Physical right mouse button or pen barrel button currently down.
     pub right_button_down: Option<RightButtonDownFn>,
+    /// File drags and drops read from the OS where winit 0.30 reports none (native Wayland),
+    /// added to each frame's `hovered_files` / `dropped_files` before the UI runs.
+    pub file_drags: Option<FileDragsFn>,
     /// The persistent brush preset store, loading in the background (desktop; see
     /// `photocraft_engine::preset_store`). Attached to the session once it arrives; without
     /// one, brush presets are session-only unless the shell attached a store before startup.
